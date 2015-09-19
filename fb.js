@@ -4,7 +4,7 @@
 
         var request = require('request'),
             crypto  = require('crypto'),
-            version = require(require('path').resolve(__dirname, 'package.json')).version,
+            version = require('./package.json').version,
             getLoginUrl,
             pingFacebook,
             api,
@@ -16,6 +16,7 @@
             parseOAuthApiResponse,
             setAccessToken,
             getAccessToken,
+            getAppSecretProof,
             parseSignedRequest,
             base64UrlDecode,
             log,
@@ -26,9 +27,13 @@
                 'accessToken': null,
                 'appId': null,
                 'appSecret': null,
+                'appSecretProof': null,
+                'beta': false,
                 'timeout': null,
                 'scope':  null,
-                'redirectUri': null
+                'redirectUri': null,
+                'proxy': null,
+                'userAgent': 'thuzi_nodejssdk/' + version
             },
             readOnlyCalls = {
                 'admin.getallocation': true,
@@ -130,7 +135,8 @@
             //
             if(typeof arguments[0] === 'string') {
                 graph.apply(this, arguments);
-            } else {
+            }
+            else {
                 rest.apply(this, arguments);
             }
         };
@@ -167,11 +173,14 @@
                 var type = typeof next;
                 if(type === 'string' && !method) {
                     method = next.toLowerCase();
-                } else if(type === 'function' && !cb) {
+                }
+                else if(type === 'function' && !cb) {
                     cb = next;
-                } else if(type === 'object' && !params) {
+                }
+                else if(type === 'object' && !params) {
                     params = next;
-                } else {
+                }
+                else {
                     log('Invalid argument passed to FB.api(): ' + next);
                     return;
                 }
@@ -226,29 +235,49 @@
                 key,
                 value,
                 requestOptions,
-                isOAuthRequest;
+                isOAuthRequest,
+                pool;
 
             cb = cb || function() {};
-            if(!params.access_token && options('accessToken')) {
-                params.access_token = options('accessToken');
+            if(!params.access_token) {
+                if(opts.accessToken) {
+                    params.access_token = opts.accessToken;
+                    if(opts.appSecret) {
+                        params.appsecret_proof = opts.appSecretProof;
+                    }
+                }
+            }
+            else if(!params.appsecret_proof && opts.appSecret) {
+                params.appsecret_proof = getAppSecretProof(params.access_token, opts.appSecret);
             }
 
             if(domain === 'graph') {
-                uri = 'https://graph.facebook.com/' + path;
+                uri = 'https://graph.' + (options('beta') ? 'beta.' : '') + 'facebook.com/' + path;
                 isOAuthRequest = /^oauth.*/.test('oauth/');
             }
             else if(domain == 'api') {
-                uri = 'https://api.facebook.com/' + path;
+                uri = 'https://api.' + (options('beta') ? 'beta.' : '') + 'facebook.com/' + path;
             }
             else if(domain == 'api_read') {
-                uri = 'https://api-read.facebook.com/' + path;
+                uri = 'https://api-read.' + (options('beta') ? 'beta.' : '') + 'facebook.com/' + path;
             }
 
             if(method === 'post') {
                 body = '';
                 if(params.access_token) {
-                    uri += '?access_token=' + encodeURIComponent(params.access_token);
+                    if((uri.indexOf("?") !== -1)) {
+                        uri += '&';
+                    }
+                    else {
+                        uri += '?';
+                    }
+                    uri += 'access_token=' + encodeURIComponent(params.access_token);
                     delete params['access_token'];
+
+                    if(params.appsecret_proof) {
+                        uri += '&appsecret_proof=' + encodeURIComponent(params.appsecret_proof);
+                        delete params['appsecret_proof'];
+                    }
                 }
 
                 for(key in params) {
@@ -265,7 +294,12 @@
                     body = body.substring(0, body.length - 1);
                 }
             } else {
-                uri += '?';
+                if((uri.indexOf("?") !== -1)) {
+                    uri += '&';
+                }
+                else {
+                    uri += '?';
+                }
                 for(key in params) {
                     value = params[key];
                     if(typeof value !== 'string') {
@@ -276,13 +310,23 @@
                 uri = uri.substring(0, uri.length -1);
             };
 
+            pool = { maxSockets: options('maxSockets') || Number(process.env.MAX_SOCKETS) || 5 };
             requestOptions = {
                 method: method,
                 uri: uri,
-                body: body
+                body: body,
+                pool: pool
             };
+            if(options('proxy')) {
+                requestOptions['proxy'] = options('proxy');
+            }
             if(options('timeout')) {
                 requestOptions['timeout'] = options('timeout');
+            }
+            if(options('userAgent')) {
+                requestOptions['headers'] = {
+                    'User-Agent': options('userAgent')
+                };
             }
             request(requestOptions,
                 function(error, response, body) {
@@ -296,25 +340,29 @@
                 if(isOAuthRequest && response && response.statusCode === 200 &&
                     response.headers && /.*text\/plain.*/.test(response.headers['content-type'])) {
                     cb(parseOAuthApiResponse(body));
-                } else {
+                }
+                else {
                     var json;
-                    try {
+                    try{
                         json = JSON.parse(body);
-                    } catch (ex) {
-                      // sometimes FB is has API errors that return HTML and a message
-                      // of "Sorry, something went wrong". These are infrequent and unpredictable but
-                      // let's not let them blow up our application.
-                      json =  { error: {
-                          code: 'JSONPARSE',
-                          Error: ex
-                      }};
+                    }
+                    catch(ex) {
+                        // sometimes FB is has API errors that return HTML and a message
+                        // of "Sorry, something went wrong". These are infrequent and unpredictable but
+                        // let's not let them blow up our application.
+                        json =  {
+                            error: {
+                                code: 'JSONPARSE',
+                                Error: ex
+                            }
+                        };
                     }
                     cb(json);
                 }
             });
         };
 
-        parseOAuthApiResponse = function (body) {
+        parseOAuthApiResponse = function(body) {
             var result,
                 key,
                 value,
@@ -322,13 +370,14 @@
 
             result = {};
             body = body.split('&');
-            for(key in body) {
+            for(var key=0, l=body.length; key<l; key++) {
                 split = body[key].split('=');
                 if(split.length === 2) {
                     value = split[1];
                     if(!isNaN(value)) {
                         result[split[0]] = parseInt(value);
-                    } else {
+                    }
+                    else {
                         result[split[0]] = value;
                     }
                 }
@@ -342,16 +391,22 @@
             console.log(d);
         };
 
-        has = function (obj, key) {
+        has = function(obj, key) {
             return Object.prototype.hasOwnProperty.call(obj, key);
         };
 
-        getAccessToken = function () {
+        getAccessToken = function() {
             return options('accessToken');
         };
 
-        setAccessToken = function (accessToken) {
+        setAccessToken = function(accessToken) {
             options({'accessToken': accessToken});
+        };
+
+        getAppSecretProof = function(accessToken, appSecret) {
+            var hmac = crypto.createHmac('sha256', appSecret);
+            hmac.update(accessToken);
+            return hmac.digest('hex');
         };
 
         /**
@@ -367,7 +422,7 @@
          * FB.parseSignedRequest('signedRequest') // will use appSecret from options('appSecret')
          *
          */
-        parseSignedRequest = function () {
+        parseSignedRequest = function() {
             var args = Array.prototype.slice.call(arguments),
                 signedRequest = args.shift(),
                 appSecret = args.shift() || options('appSecret'),
@@ -400,9 +455,10 @@
                 return;
             }
 
-            try {
+            try{
                 envelope = JSON.parse(base64UrlDecode(encodedEnvelope));
-            } catch (ex) {
+            }
+            catch(ex) {
                 return;
             }
 
@@ -427,13 +483,13 @@
             return envelope;
         };
 
-        base64UrlDecode = function (str) {
+        base64UrlDecode = function(str) {
             var base64String = str.replace(/\-/g, '+').replace(/_/g, '/');
             var buffer = new Buffer(base64String, 'base64');
             return buffer.toString('utf8');
         }
 
-        options = function (keyOrOptions) {
+        options = function(keyOrOptions) {
             var key;
             if(!keyOrOptions) {
                 return opts;
@@ -444,9 +500,19 @@
             for(key in opts) {
                 if(has(opts, key) && has(keyOrOptions, key)) {
                     opts[key] = keyOrOptions[key];
-                    if(key == 'appId') {
-                        // ping Facebook for instrumentation requirement
-                        pingFacebook(opts[key]);
+                    switch(key){
+                        case 'appId':
+                            // ping Facebook for instrumentation requirement
+                            pingFacebook(opts[key]);
+                            break;
+
+                        case 'appSecret':
+                        case 'accessToken':
+                            opts.appSecretProof =
+                                (opts.appSecret && opts.accessToken) ?
+                                getAppSecretProof(opts.accessToken, opts.appSecret) :
+                                null;
+                            break;
                     }
                 }
             }
@@ -458,15 +524,17 @@
             this.response = res;
         }
 
-        FacebookApiException.prototype = Error.prototype;
+        FacebookApiException.prototype = Object.create(Error.prototype);
+        FacebookApiException.prototype.constructor = FacebookApiException;
 
-        nodeifyCallback = function (originalCallback) {
+        nodeifyCallback = function(originalCallback) {
             // normalizes the callback parameters so that the
             // first parameter is always error and second is response
-            return function (res) {
+            return function(res) {
                 if(!res || res.error) {
                     originalCallback(new FacebookApiException(res));
-                } else {
+                }
+                else {
                     originalCallback(null, res);
                 }
             };
@@ -480,7 +548,7 @@
          * @param params {Object} the parameters for the query
          * @param cb {Function} the callback function to handle the error and response
          */
-        napi = function () {
+        napi = function() {
             //
             // normalizes to node style callback so can use the sdk with async control flow node libraries
             //  first parameters:          error (always type of FacebookApiException)
@@ -527,7 +595,7 @@
          * @access public
          * @param opt {Object} the parameters for appId and scope
          */
-        getLoginUrl = function (opt) {
+        getLoginUrl = function(opt) {
             opt = opt || {};
             var clientId = opt.appId || opt.client_id || options('appId'),
                 redirectUri = opt.redirectUri || opt.redirect_uri || options('redirectUri') || 'https://www.facebook.com/connect/login_success.html',
@@ -539,11 +607,11 @@
                 stateQuery = '',
                 loginUrl;
 
-            if (!clientId) {
+            if(!clientId) {
                 throw new Error('client_id required');
             }
 
-            if (scope) {
+            if(scope) {
                 scopeQuery = '&scope=' + encodeURIComponent(scope);
             }
 
@@ -582,26 +650,32 @@
 
         //Response: A pixel image.
 
-        pingFacebook = function (appId) {
+        pingFacebook = function(appId) {
             var payload = {
                 resource: 'thuzi_nodejssdk',
                 appid: appId,
                 version: version
             };
 
-            try {
-                request({
+            try{
+                var requestOptions = {
                     method: 'POST',
                     uri: 'https://www.facebook.com/impression.php',
                     form: {
                         plugin: 'featured_resources',
                         payload: encodeURIComponent(JSON.stringify(payload))
                     }
-                },
-                function(error, response, body) {
-                   // ignore error/response
-                });
-            } catch (e) {
+                };
+                if(options('proxy')){
+                    requestOptions['proxy'] = options('proxy');
+                }
+
+                request(
+                    requestOptions,
+                    function(error, response, body) {
+                        // ignore error/response
+                    });
+            }catch(e) {
                 // Eat the error
             }
         };
@@ -611,7 +685,7 @@
             napi: napi, // this method does not exist in fb js sdk
             getAccessToken: getAccessToken,
             setAccessToken: setAccessToken, // this method does not exist in fb js sdk
-            parseSignedRequest : parseSignedRequest, // this method does not exist in fb js sdk
+            parseSignedRequest: parseSignedRequest, // this method does not exist in fb js sdk
             getLoginUrl: getLoginUrl, // this method does not exist in fb js sdk
             options: options, // this method does not exist in the fb js sdk
             version: version, // this method does not exist in the fb js sdk
