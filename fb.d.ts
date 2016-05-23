@@ -1,4 +1,5 @@
-/// <reference path="./es6-promise.d.ts" />
+import Promise = require("any-promise");
+
 export class Facebook {
     api(path: string): Promise<any>;
     api(path: string, callback: (response: any) => void): void;
