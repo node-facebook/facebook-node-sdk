@@ -384,7 +384,7 @@ class Facebook {
 					response.headers && /.*text\/plain.*/.test(response.headers['content-type'])) {
 					// Parse the querystring body used before v2.3
 					cb(parseOAuthApiResponse(body));
-				} else {
+				} else if (/.*application\/json.*/.test(response.headers['content-type'])) {
 					let json;
 					try {
 						json = JSON.parse(body);
@@ -399,6 +399,14 @@ class Facebook {
 							}
 						};
 					}
+					cb(json);
+				} else {
+					json = {
+						error: { 
+							code 'NOTJSON', 
+							Error: "Received unexpected content-type: " + response.headers['content-type']
+						}
+					};
 					cb(json);
 				}
 			});
