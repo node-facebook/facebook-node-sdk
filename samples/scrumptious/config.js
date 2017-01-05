@@ -1,5 +1,5 @@
 
-var config = { };
+var config = module.exports = {};
 
 // should end in /
 config.rootUrl  = process.env.ROOT_URL                  || 'http://localhost:3000/';
