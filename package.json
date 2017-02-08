@@ -46,12 +46,15 @@
     "lodash.omit": "^4.5.0",
     "mocha": "^3.2.0",
     "mocha-eslint": "^3.0.1",
-    "nock": "^9.0.2"
+    "nock": "^9.0.2",
+    "typescript": "^1.8.10",
+    "typescript-definition-tester": "0.0.4"
   },
   "engines": {
     "node": ">=4"
   },
   "publishConfig": {
     "tag": "next"
-  }
+  },
+  "typings": "fb.d.ts"
 }
