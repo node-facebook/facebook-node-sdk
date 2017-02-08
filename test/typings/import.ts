@@ -1,6 +1,5 @@
 // so happy this relative import seems to work the same as ' import FB from "fb" '
-import FB from "../../";
-import {Facebook} from "../../";
+import FB, {Facebook} from "../../";
 
 // the 3 options overloads
 FB.options().appId;
@@ -31,7 +30,7 @@ FB.api("./", "post", (response) => {});
 FB.api("./", "delete", {scope: "foo"}).then((response) => {
 });
 FB.api("./", "get", {scope: "foo"}, (response) => {});
-// All napi calls have the coumented parameters
+// All napi calls have the documented parameters
 FB.napi("./");
 FB.napi("./", (error, response) => {});
 FB.napi("./", {scope: "foo"});
