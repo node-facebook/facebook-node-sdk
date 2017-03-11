@@ -11,7 +11,7 @@ With facebook-node-sdk you can now easily write the same code and share between 
 # Installing facebook-node-sdk
 
 ```
-npm install fb
+npm install fb@next
 ```
 
 ```javascript
