@@ -651,3 +651,18 @@ Step(
     }
 );
 ```
+
+
+## Utils
+
+### now
+
+*This is a non-standard api and does not exist in the official client side FB JS SDK.*
+
+This return the facebook server time as a timestamp.
+
+```js
+FB.now(); //1491494831123
+```
+
+*Please note that as long as you have not made a request to the API the method will return your machine time.*
