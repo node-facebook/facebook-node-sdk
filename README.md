@@ -82,6 +82,20 @@ FB.api('4', { fields: 'id,name,picture.type(large)' }, function (res) {
 });
 ```
 
+Also support sub-parameters
+
+```js
+FB.api('me', { fields: ['id', 'name', 'picture.type(large)'] }, function (res) {
+  if(!res || res.error) {
+    console.log(!res ? 'error occurred' : res.error);
+    return;
+  }
+  console.log(res.id);
+  console.log(res.name);
+  console.log(res.picture);
+});
+```
+
 ### Post
 
 ```js
