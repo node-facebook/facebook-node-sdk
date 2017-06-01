@@ -385,6 +385,8 @@ class Facebook {
 			};
 		}
 
+		requestOptions['withCredentials'] = false;
+
 		debugReq(method.toUpperCase() + ' ' + uri);
 		request(requestOptions,
 			(error, response, body) => {
