@@ -423,7 +423,7 @@ class Facebook {
 						}
 					};
 				}
-				cb(json);
+				cb(json,response.headers);
 			});
 	}
 
