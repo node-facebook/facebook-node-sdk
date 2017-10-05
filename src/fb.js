@@ -61,7 +61,7 @@ const {version} = require('../package.json'),
 	},
 	stringifyParams = function(params) {
 		let data = {};
-		let keys = Object.keys(params);
+		const keys = Object.keys(params);
 
 		keys.forEach(key => {
 			let value = params[key];
