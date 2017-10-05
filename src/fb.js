@@ -53,24 +53,34 @@ const {version} = require('../package.json'),
 		return JSON.parse(header['x-page-usage']);
 	},
 	buildRateLimitObjectFromJson = function(rateLimit) {
-		return Object.assign(Object.create(null), {
+		return {
 			callCount: rateLimit['call_count'],
 			totalTime: rateLimit['total_time'],
 			totalCPUTime: rateLimit['total_cputime']
-		});
+		};
 	},
 	stringifyParams = function(params) {
-		var data = {};
+		let data = {};
+		let keys = Object.keys(params);
 
-		for ( let key in params ) {
+		keys.forEach(key => {
 			let value = params[key];
-			if ( value && typeof value !== 'string' ) {
-				value = JSON.stringify(value);
+
+			try {
+				parseThis(value);
+			} catch (e) {
+				return 0;
 			}
-			if ( value !== undefined ) {
-				data[key] = value;
+
+			function parseThis(value) {
+				if ( value && typeof value !== 'string' ) {
+					value = JSON.stringify(value);
+				}
+				if ( value !== undefined ) {
+					data[key] = value;
+				}
 			}
-		}
+		});
 
 		return QS.stringify(data);
 	},
