@@ -5,6 +5,7 @@ var FB = require('../..'),
 	notError = require('../_supports/notError'),
 	omit = require('lodash.omit'),
 	defaultOptions = omit(FB.options(), 'appId'),
+	request = require('request'),
 	{version} = require('../../package.json');
 
 nock.disableNetConnect();
@@ -19,6 +20,19 @@ afterEach(function() {
 });
 
 describe('FB.options', function() {
+	describe('request', function() {
+		it('Should default to request', function() {
+			expect(FB.options('request')).to.equal(request);
+		});
+
+		it('Should allow request to be set', function() {
+			const wrapped = request.defaults();
+			FB.options({request: wrapped});
+			expect(FB.options('request')).to.equal(wrapped);
+			expect(FB.options('request')).to.not.equal(request);
+		});
+	});
+
 	describe('beta', function() {
 		it('Should default beta to false', function() {
 			expect(FB.options('beta')).to.be.false;

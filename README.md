@@ -428,6 +428,7 @@ var accessToken = FB.options('accessToken'); //will get the accessToken of 'XYZ'
 ```
 
 The existing options are:
+* `'request'` [request](https://github.com/request/requests) function that will be used to make API requests. Allows the configuration of request [options](https://github.com/request/request#requestoptions-callback) by passing the result of calling [`request.defaults`](https://github.com/request/request#requestdefaultsoptions).
 * `'accessToken'` string representing the Facebook accessToken to be used for requests. This is the same option that is updated by the `setAccessToken` and `getAccessToken` methods.
 * `'appId'` The ID of your app, found in your app's dashboard.
 * `'appSecret'` string representing the Facebook application secret.

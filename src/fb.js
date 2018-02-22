@@ -19,6 +19,7 @@ var {version} = require('../package.json'),
 		console.log(d); // eslint-disable-line no-console
 	},
 	defaultOptions = Object.assign(Object.create(null), {
+		request,
 		Promise: Promise,
 		accessToken: null,
 		appId: null,
@@ -386,7 +387,7 @@ class Facebook {
 		}
 
 		debugReq(method.toUpperCase() + ' ' + uri);
-		request(requestOptions,
+		this.options('request')(requestOptions,
 			(error, response, body) => {
 				if ( error !== null ) {
 					if ( error === Object(error) && error::has('error') ) {
