@@ -23,6 +23,7 @@
     "build": "babel src/ -d lib/",
     "buildw": "babel -w src/ -d lib/",
     "test": "npm run build && node ./node_modules/mocha/bin/mocha --recursive",
+    "test-live": "npm run build && node ./node_modules/mocha/bin/mocha --recursive test_live",
     "prepublish": "npm run build"
   },
   "dependencies": {
@@ -42,6 +43,8 @@
     "babel-register": "^6.24.1",
     "bluebird": "^3.5.0",
     "chai": "^3.5.0",
+    "chai-as-promised": "^7.1.1",
+    "dotenv": "^5.0.0",
     "eslint": "^3.19.0",
     "lodash.omit": "^4.5.0",
     "mocha": "^3.2.0",
