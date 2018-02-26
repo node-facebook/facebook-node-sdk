@@ -19,6 +19,49 @@ afterEach(function() {
 });
 
 describe('FB.options', function() {
+	describe('onRequest', function() {
+		it('Should be called with the request object', function(done) {
+			const expectedRequest = nock('https://graph.facebook.com:443').get('/v2.3/4').reply(200, {});
+			let called = false;
+			let nockRequest;
+			expectedRequest.on('request', request => { nockRequest = request; });
+			FB.options({
+				onRequest(request) {
+					called = true;
+					expect(request).to.equal(nockRequest);
+				}
+			});
+			FB.api('/4', function(result) {
+				notError(result);
+				expectedRequest.done();
+				expect(called).to.be.true;
+				done();
+			});
+		});
+	});
+
+	describe('requestOptions', function() {
+		it('Should be deep defaults for per-request options', function(done) {
+			const headers = {'X-Test-Header': 'test'};
+			const expectedRequest = nock(
+				'https://graph.facebook.com:443',
+				{
+					reqheaders: headers
+				}
+			).get('/v2.3/4').reply(200, {});
+			FB.options({
+				requestOptions: {
+					headers
+				}
+			});
+			FB.api('/4', function(result) {
+				notError(result);
+				expectedRequest.done();
+				done();
+			});
+		});
+	});
+
 	describe('beta', function() {
 		it('Should default beta to false', function() {
 			expect(FB.options('beta')).to.be.false;

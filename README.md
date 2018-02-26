@@ -428,6 +428,8 @@ var accessToken = FB.options('accessToken'); //will get the accessToken of 'XYZ'
 ```
 
 The existing options are:
+* `'onRequest'` function called with the [`http.ClientRequest`](https://nodejs.org/api/http.html#http_class_http_clientrequest) for each request.
+* `'requestOptions'` Object of [needle request options](https://github.com/tomas/needle#request-options) to apply to all http requests. The following FB options take priority over requestOptions: `proxy`, `timeout`, `userAgent`.
 * `'accessToken'` string representing the Facebook accessToken to be used for requests. This is the same option that is updated by the `setAccessToken` and `getAccessToken` methods.
 * `'appId'` The ID of your app, found in your app's dashboard.
 * `'appSecret'` string representing the Facebook application secret.
