@@ -15,6 +15,10 @@ matrix:
       script: npm run lint
       env:
         - CI_TEST=lint-only
+    - node_js: "9"
+      script: npm run test-live
+      env:
+        - CI_TEST=test-live
 cache:
   directories:
     - node_modules
