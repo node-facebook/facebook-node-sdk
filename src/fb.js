@@ -11,6 +11,7 @@ import FacebookApiException from './FacebookApiException';
 var {version} = require('../package.json'),
 	debugReq = debug('fb:req'),
 	debugSig = debug('fb:sig'),
+	debugFbDebug = debug('fb:fbdebug'),
 	METHODS = ['get', 'post', 'delete', 'put'],
 	toString = Object.prototype.toString,
 	has = Object.prototype.hasOwnProperty,
@@ -394,6 +395,10 @@ class Facebook {
 					}
 					return cb({error});
 				}
+
+				debugFbDebug(`x-fb-trace-id: ${response.headers['x-fb-trace-id']}`);
+				debugFbDebug(`x-fb-rev: ${response.headers['x-fb-rev']}`);
+				debugFbDebug(`x-fb-debug: ${response.headers['x-fb-debug']}`);
 
 				let appUsage = parseResponseHeaderAppUsage(response.headers);
 				if ( appUsage !== null ) {

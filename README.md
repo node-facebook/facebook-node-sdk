@@ -537,6 +537,10 @@ FB.api('/me', function (res) {
 });
 ```
 
+### Debugging
+
+If you need to submit a bug report to Facebook you can run your application with `DEBUG=fb:req,fb:fbdebug` and request information will be output to your console along with `x-fb-trace-id`, `x-fb-rev`, and `x-fb-debug` headers you can include.
+
 ## Promise based interface
 
 *This is a non-standard api and does not exist in the official client side FB JS SDK.*
