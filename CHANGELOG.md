@@ -8,6 +8,7 @@ Changelog
 * Debug headers are now logged with DEBUG=fb:fbdebug
 * Log messages to stderr using console.warn instead of console.log
 * **BREAKING CHANGE**: Switched from the `request` library to `needle`
+* **BREAKING CHANGE**: Passing invalid methods or arguments to `FB.api` now throws a TypeError instead of logging and returning undefined
 
 ## 2.0.0
 
