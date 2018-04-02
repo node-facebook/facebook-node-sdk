@@ -9,6 +9,7 @@ Changelog
 * Log messages to stderr using console.warn instead of console.log
 * **BREAKING CHANGE**: Switched from the `request` library to `needle`
 * **BREAKING CHANGE**: Passing invalid methods or arguments to `FB.api` now throws a TypeError instead of logging and returning undefined
+* Use of the [function-bind operator](https://github.com/tc39/proposal-bind-operator) has been removed
 
 ## 2.0.0
 
