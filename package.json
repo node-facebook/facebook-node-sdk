@@ -1,14 +1,16 @@
 {
-  "name": "fb",
-  "version": "2.0.0",
-  "description": "NodeJS Library for Facebook",
+  "name": "fb-ts",
+  "version": "3.0.0",
+  "description": "NodeJS Library for Facebook [TypeScript compatible]",
   "keywords": [
     "facebook",
+    "typescript",
     "fb",
     "graph"
   ],
   "author": "Thuzi LLC <pshrestha@thuzi.com> (https://github.com/Thuzi)",
   "contributors": [
+    "Shibu Lijack <shibulijack@gmail.com> (https://github.com/shibulijack)",
     "Daniel Friesen <d@danf.ca> (http://danf.ca)"
   ],
   "homepage": "https://github.com/node-facebook/facebook-node-sdk",
@@ -18,6 +20,7 @@
     "url": "https://github.com/node-facebook/facebook-node-sdk.git"
   },
   "main": "./lib/fb.js",
+  "types": "./lib/fb.d.ts",
   "scripts": {
     "precommit": "lint-staged",
     "lint": "eslint .",
