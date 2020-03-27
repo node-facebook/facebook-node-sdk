@@ -284,7 +284,7 @@ FB.api('oauth/access_token', {
     }
 
     var accessToken = res.access_token;
-    var expires = res.expires ? res.expires : 0;
+    var expires = res.expires_in ? res.expires_in : 0;
 });
 ```
 
@@ -327,7 +327,7 @@ FB.api('oauth/access_token', {
     }
 
     var accessToken = res.access_token;
-    var expires = res.expires ? res.expires : 0;
+    var expires = res.expires_in ? res.expires_in : 0;
 });
 ```
 
