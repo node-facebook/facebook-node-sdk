@@ -26,6 +26,7 @@ var {version} = require('../package.json'),
 		appSecret: null,
 		appSecretProof: null,
 		beta: false,
+		graphVideo: false,
 		version: 'v2.5',
 		timeout: null,
 		scope: null,
@@ -358,7 +359,7 @@ class Facebook {
 		if ( !/^v\d+\.\d+\//.test(path) ) {
 			path = this.options('version') + '/' + path;
 		}
-		uri = `https://graph.${this.options('beta') ? 'beta.' : ''}facebook.com/${path}`;
+		uri = `https://graph${this.options('graphVideo') ? '-video' : ''}.${this.options('beta') ? 'beta.' : ''}facebook.com/${path}`;
 
 		parsedUri = URL.parse(uri);
 		delete parsedUri.search;
